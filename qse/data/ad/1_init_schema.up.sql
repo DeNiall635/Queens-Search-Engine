@@ -1,0 +1,7 @@
+CREATE TABLE advert (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR NOT NULL,
+    uri VARCHAR NOT NULL,
+    content VARCHAR NOT NULL,
+    keyword VARCHAR NOT NULL
+)

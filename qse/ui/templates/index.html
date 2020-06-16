@@ -1,0 +1,48 @@
+<html>
+
+<head>
+    <title>Queen's Search Engine</title>
+    <style>
+        html, body {
+            font-size: 18px;
+        }
+
+        .title-link {
+            color: brown;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .search {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .search > .text-input {
+            display: flex;
+            flex: 1;
+            max-width: 500px;
+            min-width: 10px;
+            font-size: 1.2em;
+        }
+
+        .search > .submit-input {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+
+<body>
+    <a class="title-link" href="/">
+        <h1>Queen's Search Engine</h1>
+    </a>
+    <form class="search" action="search" method="GET">
+        <input class="text-input" name="q" type="text"></input>
+        <input class="submit-input" type="submit" value="🔍"></input>
+    </form>
+</body>
+
+</html>

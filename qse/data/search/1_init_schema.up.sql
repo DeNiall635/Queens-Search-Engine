@@ -1,0 +1,8 @@
+CREATE TABLE page (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR NOT NULL,
+    uri VARCHAR NOT NULL UNIQUE,
+    index_time TIMESTAMP NOT NULL,
+    content VARCHAR NOT NULL,
+    tokens TSVECTOR NOT NULL
+)

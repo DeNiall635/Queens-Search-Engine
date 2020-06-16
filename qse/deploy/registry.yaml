@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${REGISTRY_SECRET}
+  namespace: ${NAMESPACE}
+data:
+  .dockerconfigjson: ${REGISTRY_AUTH}
+type: kubernetes.io/dockerconfigjson

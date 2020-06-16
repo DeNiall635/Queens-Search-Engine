@@ -1,0 +1,72 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: spider
+  namespace: ${NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spider
+  template:
+    metadata:
+      labels:
+        app: spider
+    spec:
+      containers:
+      - name: spider
+        image: ${REGISTRY}/spider:${VERSION}
+        ports:
+        - containerPort: 5000
+        env:
+        - name: SEARCH_DB
+          valueFrom:
+            secretKeyRef:
+              name: ${SEARCH_DB_SECRET}
+              key: searchDatabase
+      imagePullSecrets:
+      - name: ${REGISTRY_SECRET}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spider
+  namespace: ${NAMESPACE}
+spec:
+  ports:
+  - name: default
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: spider
+  type: NodePort 
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: spider
+  namespace: ${NAMESPACE}
+spec:
+  rules:
+  - host: spider.${HOST}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: spider
+          servicePort: 5000
+      - path: /crawl
+        backend:
+          serviceName: spider
+          servicePort: 5000
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: spider
+          servicePort: 5000
+      - path: /crawl
+        backend:
+          serviceName: spider
+          servicePort: 5000

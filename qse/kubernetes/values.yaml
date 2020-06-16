@@ -1,0 +1,7 @@
+namespace: namespace
+registry: registry
+version: version
+host: host
+registry_auth: registry_auth
+search_database: search_database
+ad_database: ad_database

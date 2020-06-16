@@ -1,0 +1,88 @@
+version: '3'
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - ../data/dev/dev.sql:/docker-entrypoint-initdb.d/init.sql
+    environment: 
+      POSTGRES_PASSWORD: postgres
+  migrate_search:
+    image: migrate/migrate
+    volumes:
+      - ../data/search:/migrations
+    command: -path=/migrations/ -database postgres://postgres:postgres@db:5432/search?sslmode=disable up
+    restart: on-failure:5 
+    depends_on: 
+      - db
+  migrate_ad:
+    image: migrate/migrate
+    volumes:
+      - ../data/ad:/migrations
+    command: -path=/migrations/ -database postgres://postgres:postgres@db:5432/ad?sslmode=disable up
+    restart: on-failure:5 
+    depends_on: 
+      - db
+  spider:
+    image: golang:1.13
+    volumes:
+      - ../:/build
+    environment: 
+      SEARCH_DB: postgres://postgres:postgres@db:5432/search?sslmode=disable
+    working_dir: /build/spider
+    command: go run cmd/qse-spider/main.go
+    depends_on: 
+      - migrate_search
+    ports:
+      - "5001:5000"
+  search:
+    image: golang:1.13
+    volumes:
+      - ../:/build
+    working_dir: /build/search
+    command: go run cmd/qse-search/main.go
+    environment: 
+      SEARCH_DB: postgres://postgres:postgres@db:5432/search?sslmode=disable
+    depends_on: 
+      - migrate_search
+    ports:
+      - "5002:5000"
+  ad:
+    image: golang:1.13
+    volumes:
+      - ../:/build
+    working_dir: /build/ad
+    command: go run cmd/qse-ad/main.go
+    environment: 
+      AD_DB: postgres://postgres:postgres@db:5432/ad?sslmode=disable
+    depends_on: 
+      - migrate_ad
+    ports:
+      - "5003:5000"
+  ui:
+    image: golang:1.13
+    volumes:
+      - ../:/build
+    environment: 
+      SEARCH_ENDPOINT: http://search:5000
+      AD_ENDPOINT: http://ad:5000
+    working_dir: /build/ui
+    command: go run cmd/qse-ui/main.go
+    depends_on: 
+      - search
+      - ad
+    ports:
+      - "5000:5000"
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on: 
+      - ui
+    ports:
+      - "9090:9090"
+  grafana:
+    image: grafana/grafana
+    depends_on: 
+      - prometheus
+    ports:
+      - "3000:3000"

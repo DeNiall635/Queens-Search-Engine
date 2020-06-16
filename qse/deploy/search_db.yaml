@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${SEARCH_DB_SECRET}
+  namespace: ${NAMESPACE}
+data:
+  searchDatabase: ${SEARCH_DATABASE}
+type: Opaque

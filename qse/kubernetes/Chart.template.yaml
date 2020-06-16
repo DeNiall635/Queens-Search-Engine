@@ -1,0 +1,8 @@
+apiVersion: v2
+name: qse
+description: Queen's Search Engine
+type: application
+
+version: ${VERSION}
+
+appVersion: ${VERSION}

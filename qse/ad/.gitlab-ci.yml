@@ -1,0 +1,38 @@
+lint-ad:
+  only:
+    changes:
+      - "ad/*"
+  stage: lint
+  image: "golang:1.13"
+  script:
+    - cd ad
+    - GO111MODULE=off go get -u golang.org/x/lint/golint
+    - make lint
+
+test-ad:
+  only:
+    changes:
+      - "ad/*"
+  stage: test
+  image: "golang:1.13"
+  script:
+    - cd ad
+    - make test
+
+build-ad:
+  stage: build
+  variables:
+    NAME: "ad"
+  only: 
+    - tags
+  tags:
+    - shell
+  script:
+    # Log in, build and push image
+    - cd ad
+    - docker login -u $DOCKER_USER -p "$(echo "$DOCKER_PASS_64" | base64 -d)" ${REGISTRY}
+    - make REGISTRY=${REGISTRY} NAME=${NAME} VERSION=${CI_COMMIT_TAG}
+    - docker tag "${REGISTRY}/${NAME}:${CI_COMMIT_TAG}" "${REGISTRY}/${NAME}:latest"
+    - docker push "${REGISTRY}/${NAME}:${CI_COMMIT_TAG}"
+    - docker push "${REGISTRY}/${NAME}:latest"
+ 

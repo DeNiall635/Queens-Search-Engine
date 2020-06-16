@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: searchdb
+  namespace: {{ .Values.namespace }}
+data:
+  searchDatabase: {{ .Values.search_database }}
+type: Opaque

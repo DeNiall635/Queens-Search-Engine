@@ -1,0 +1,38 @@
+lint-ui:
+  only:
+    changes:
+      - "ui/*"
+  stage: lint
+  image: "golang:1.13"
+  script:
+    - cd ui
+    - GO111MODULE=off go get -u golang.org/x/lint/golint
+    - make lint
+
+test-ui:
+  only:
+    changes:
+      - "ui/*"
+  stage: test
+  image: "golang:1.13"
+  script:
+    - cd ui
+    - make test
+
+build-ui:
+  stage: build
+  variables:
+    NAME: "ui"
+  only: 
+    - tags
+  tags:
+    - shell
+  script:
+    # Log in, build and push image
+    - cd ui
+    - docker login -u $DOCKER_USER -p "$(echo "$DOCKER_PASS_64" | base64 -d)" ${REGISTRY}
+    - make REGISTRY=${REGISTRY} NAME=${NAME} VERSION=${CI_COMMIT_TAG}
+    - docker tag "${REGISTRY}/${NAME}:${CI_COMMIT_TAG}" "${REGISTRY}/${NAME}:latest"
+    - docker push "${REGISTRY}/${NAME}:${CI_COMMIT_TAG}"
+    - docker push "${REGISTRY}/${NAME}:latest"
+ 

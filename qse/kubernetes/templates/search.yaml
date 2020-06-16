@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: search
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: search
+  template:
+    metadata:
+      labels:
+        app: search
+    spec:
+      containers:
+      - name: search
+        image: "{{ .Values.registry }}/search:{{ .Values.version }}"
+        ports:
+        - containerPort: 5000
+        env:
+        - name: SEARCH_DB
+          valueFrom:
+            secretKeyRef:
+              name: searchdb
+              key: searchDatabase
+      imagePullSecrets:
+      - name: registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: search
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - name: default
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: search
+  type: NodePort 
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: search
+  namespace: {{ .Values.namespace }}
+spec:
+  rules:
+  - host: "search.{{ .Values.host }}"
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: search
+          servicePort: 5000
+      - path: /search
+        backend:
+          serviceName: search
+          servicePort: 5000
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: search
+          servicePort: 5000
+      - path: /search
+        backend:
+          serviceName: search
+          servicePort: 5000

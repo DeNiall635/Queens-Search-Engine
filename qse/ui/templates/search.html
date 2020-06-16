@@ -1,0 +1,145 @@
+<html>
+
+<head>
+    <title>Queen's Search Engine</title>
+    <style>
+        html, body {
+            font-size: 18px;
+        }
+
+        .title-link {
+            color: brown;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .search {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .search > .text-input {
+            display: flex;
+            flex: 1;
+            max-width: 500px;
+            min-width: 10px;
+            font-size: 1.2em;
+        }
+
+        .search > .submit-input {
+            font-size: 1.2em;
+        }
+
+        .pages {
+            text-align: center;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .pages > li {
+            display: inline-block;
+            *display:inline;
+        }
+
+        .pages .current {
+            pointer-events: none;
+            cursor: default;
+            text-decoration: none;
+            color: black;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            flex-basis: 100%;
+        }
+
+        .ads {
+            text-align: center;
+            flex: 1;
+        }
+
+        .results {
+            flex: 2;
+        }
+
+        .subtitle {
+            font-size: 0.7em;
+            color:cadetblue;
+        }
+
+        .title {
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .highlight {
+            font-size: 0.8em;
+            margin: 0;
+            padding: 0;
+        }
+
+        .result:not(:last-of-type) {
+            border-bottom: 1px solid black;
+            padding: 0 0 10px 0;
+        }
+
+        .result:not(:first-of-type) {
+            margin: 10px 0 0 0;
+        }
+    </style>
+</head>
+
+<body>
+    <a class="title-link" href="/">
+        <h1>Queen's Search Engine</h1>
+    </a>
+    <form class="search" action="search" method="GET">
+        <input class="text-input" name="q" type="text" value="{{.Query}}"></input>
+        <input class="submit-input" type="submit" value="🔍"></input>
+    </form>
+    <div class="content">
+        <section class="column results">
+            {{ if eq (len .Result.Pages) 0 }}
+                Sorry. No matching results found
+            {{ end }}
+            {{range .Result.Pages}}
+            <div class="result">
+                <a href="{{.URI}}">
+                    <span class="subtitle">{{.URI}}</span>
+                    <h3 class="title">{{.Title}}</h3>
+                </a>
+                <p class="highlight">{{.Highlight}}</p>
+            </div>
+            {{end}}
+        </section>
+        <section class="column ads">
+            <h2>Advert</h2>
+            <div>
+                <a alt="{{.Ad.Title}}" href="{{.Ad.URI}}">
+                    {{.Ad.Content}}
+                </a>
+            </div>
+        </section>
+    </div>
+    <section>
+        <ul class="pages">
+            {{range .Pages}}
+            <li><a class="page{{if .Current}} current{{end}}" href="/search?q={{$.Query}}&p={{.Index}}">{{.Index}}</a></li>
+            {{end}}
+        </ul>
+    </section>
+</body>
+
+</html>

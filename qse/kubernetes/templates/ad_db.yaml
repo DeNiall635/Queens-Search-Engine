@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: addb
+  namespace: {{ .Values.namespace }}
+data:
+  adDatabase: {{ .Values.ad_database }}
+type: Opaque

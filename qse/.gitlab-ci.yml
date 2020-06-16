@@ -1,0 +1,52 @@
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+include: 
+  - "/ui/.gitlab-ci.yml"
+  - "/search/.gitlab-ci.yml"
+  - "/spider/.gitlab-ci.yml"
+  - "/ad/.gitlab-ci.yml"
+
+deploy:
+  stage: deploy
+  image: alpine:3.7
+  only: 
+    - tags
+  variables:
+    KUBE_CONTEXT: "ci"
+    MIGRATE_VERSION: "v4.7.1"
+    HELM_VERSION: "v3.0.2"
+    KUBECTL_VERSION: "v1.16.0"
+  script:
+    # Install env deploy dependencies
+    - apk update && apk add curl gettext tar
+    # Install kubectl
+    - curl -LO "https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+    - chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
+    - mkdir -p $HOME/.kube
+    # Install helm
+    - curl -LO https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz
+    - tar -zxvf helm-${HELM_VERSION}-linux-amd64.tar.gz
+    - mv linux-amd64/helm /usr/local/bin/helm
+    # Install migrate for DB migrations
+    - curl -L https://github.com/golang-migrate/migrate/releases/download/${MIGRATE_VERSION}/migrate.linux-amd64.tar.gz | tar xvz
+    # Apply search migrations to DB
+    - ./migrate.linux-amd64 -path=./data/search -database $(echo "${SEARCH_DATABASE}" | base64 -d) up
+    # Apply ad migrations to DB
+    - ./migrate.linux-amd64 -path=./data/ad -database $(echo "${AD_DATABASE}" | base64 -d) up
+    # Authenticate with cluster
+    - echo "${KUBE_CONFIGURATION}" | base64 -d > ~/.kube/config
+    # Set up version env variable
+    - export VERSION=${CI_COMMIT_TAG}
+    # Set chart version
+    - envsubst < kubernetes/Chart.template.yaml > kubernetes/Chart.yaml
+    # Install QSE
+    - helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+    - helm repo update
+    - helm upgrade --set namespace="${NAMESPACE}" --set registry="${REGISTRY}" --set version="${VERSION}" --set host="${HOST}" --set registry_auth="${REGISTRY_AUTH}" --set search_database="${SEARCH_DATABASE}" --set ad_database="${AD_DATABASE}" qse kubernetes --install
+    - helm upgrade prometheus stable/prometheus --install -f monitoring/prometheus.yml
+    - helm upgrade grafana stable/grafana --install
+    

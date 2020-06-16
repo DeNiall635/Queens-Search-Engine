@@ -1,0 +1,72 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: ad
+  namespace: ${NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ad
+  template:
+    metadata:
+      labels:
+        app: ad
+    spec:
+      containers:
+      - name: ad
+        image: ${REGISTRY}/ad:${VERSION}
+        ports:
+        - containerPort: 5000
+        env:
+        - name: AD_DB
+          valueFrom:
+            secretKeyRef:
+              name: ${AD_DB_SECRET}
+              key: adDatabase
+      imagePullSecrets:
+      - name: ${REGISTRY_SECRET}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ad
+  namespace: ${NAMESPACE}
+spec:
+  ports:
+  - name: default
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: ad
+  type: NodePort 
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ad
+  namespace: ${NAMESPACE}
+spec:
+  rules:
+  - host: ad.${HOST}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: ad
+          servicePort: 5000
+      - path: /ad
+        backend:
+          serviceName: ad
+          servicePort: 5000
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: ad
+          servicePort: 5000
+      - path: /ad
+        backend:
+          serviceName: ad
+          servicePort: 5000

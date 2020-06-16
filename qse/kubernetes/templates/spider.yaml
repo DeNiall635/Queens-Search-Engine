@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spider
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spider
+  template:
+    metadata:
+      labels:
+        app: spider
+    spec:
+      containers:
+      - name: spider
+        image: "{{ .Values.registry }}/spider:{{ .Values.version }}"
+        ports:
+        - containerPort: 5000
+        env:
+        - name: SEARCH_DB
+          valueFrom:
+            secretKeyRef:
+              name: searchdb
+              key: searchDatabase
+      imagePullSecrets:
+      - name: registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spider
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - name: default
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: spider
+  type: NodePort 
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: spider
+  namespace: {{ .Values.namespace }}
+spec:
+  rules:
+  - host: "spider.{{ .Values.host }}"
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: spider
+          servicePort: 5000
+      - path: /crawl
+        backend:
+          serviceName: spider
+          servicePort: 5000
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: spider
+          servicePort: 5000
+      - path: /crawl
+        backend:
+          serviceName: spider
+          servicePort: 5000
